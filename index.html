@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scooter Jam · Service Admin</title>
+<meta name="theme-color" content="#1537B8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Scooter Jam brand ---------- */
+  :root {
+    --blue: #1537B8;        /* royal blue */
+    --blue-dark: #0C2580;
+    --blue-soft: #E8EDFB;
+    --yellow: #FFD400;      /* highlight yellow */
+    --yellow-dark: #E5BE00;
+    --ink: #0E1A45;
+    --muted: #5A6487;
+    --line: #D9E0F3;
+    --bg: #F2F5FC;
+    --red: #D32F2F;
+    --radius: 14px;
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body { font-family: var(--body); background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.4; }
+
+  /* header */
+  header {
+    background: var(--blue); color: #fff;
+    padding: 12px 16px calc(12px) ;
+    padding-top: max(12px, env(safe-area-inset-top));
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 4px solid var(--yellow);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .badge {
+    width: 40px; height: 40px; border-radius: 50%; flex: none;
+    background: var(--blue-dark); border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-style: italic; font-weight: 900; font-size: 16px; letter-spacing: -.02em;
+  }
+  .badge span { color: var(--yellow); }
+  .wordmark { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 22px; line-height: 1; text-transform: uppercase; letter-spacing: .01em; }
+  .wordmark small { display: block; font-family: var(--body); font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: .12em; color: var(--yellow); margin-top: 3px; }
+  nav { display: flex; gap: 6px; }
+  nav button {
+    font-family: var(--display); font-style: italic; font-weight: 800; font-size: 17px; text-transform: uppercase;
+    background: transparent; color: #fff; border: 0; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  nav button.on { background: var(--yellow); color: var(--blue-dark); }
+  nav svg { width: 20px; height: 20px; }
+  nav button.on .pill { background: var(--blue); color: #fff; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 16px 14px 40px; padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+
+  /* section titles: italic, with yellow chevrons like the IG posts */
+  .title {
+    font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase;
+    font-size: 26px; color: var(--blue); margin: 8px 2px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .title::after { content: "»»"; color: var(--yellow-dark); letter-spacing: -.1em; font-size: 24px; }
+
+  .card { background: #fff; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 0 var(--line), 0 6px 18px rgba(21,55,184,.06); }
+  .card h2 {
+    margin: 0 0 14px; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase;
+    font-size: 19px; color: var(--blue); display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .num { width: 24px; height: 24px; border-radius: 50%; background: var(--yellow); color: var(--blue-dark); display: grid; place-items: center; font-size: 15px; font-style: normal; }
+
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  input, select {
+    width: 100%; min-height: 48px; padding: 10px 12px; font: 500 16px var(--body); color: var(--ink);
+    background: var(--bg); border: 2px solid transparent; border-radius: 10px; -webkit-appearance: none; appearance: none;
+  }
+  select { background-image: linear-gradient(45deg, transparent 50%, var(--blue) 50%), linear-gradient(135deg, var(--blue) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 21px, calc(100% - 12px) 21px; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 32px; }
+  input:focus, select:focus { outline: none; border-color: var(--blue); background-color: #fff; }
+  .field { margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid .field { margin-bottom: 0; }
+
+  .toggle { display: flex; align-items: center; gap: 10px; margin-top: 4px; font-weight: 600; cursor: pointer; user-select: none; }
+  .toggle input { width: 22px; height: 22px; min-height: 0; accent-color: var(--blue); -webkit-appearance: checkbox; appearance: checkbox; }
+
+  /* buttons */
+  .btn {
+    min-height: 50px; padding: 0 20px; border: 0; border-radius: 12px; cursor: pointer;
+    font-family: var(--display); font-style: italic; font-weight: 800; font-size: 19px; text-transform: uppercase; letter-spacing: .02em;
+    background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn.yellow { background: var(--yellow); color: var(--blue-dark); }
+  .btn.ghost { background: var(--blue-soft); color: var(--blue); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .btn.full { width: 100%; }
+
+  /* service adder + lines */
+  .adder { display: grid; grid-template-columns: 1fr 140px 150px; gap: 12px; align-items: end; }
+  .adder .add { grid-column: 1 / -1; }
+  .lines { margin-top: 14px; border-top: 2px dashed var(--line); }
+  .line { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .line .info { flex: 1; min-width: 0; }
+  .line .item { font-weight: 600; }
+  .line .mech { font-size: 13px; color: var(--muted); }
+  .line .price { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .x { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: #FDECEC; color: var(--red); font-size: 20px; line-height: 1; cursor: pointer; }
+  .empty { color: var(--muted); padding: 14px 0; text-align: center; font-size: 15px; }
+
+  /* totals panel */
+  .summary { margin-top: 14px; display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: stretch; }
+  .total-box { background: var(--blue); color: #fff; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+  .total-box .sub { font-size: 13px; opacity: .85; }
+  .total-box .big { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 30px; color: var(--yellow); line-height: 1.1; }
+
+  /* sticky action bar */
+  .actionbar { background: #fff; border-radius: var(--radius); padding: 12px 14px; box-shadow: 0 1px 0 var(--line), 0 6px 18px rgba(21,55,184,.06); }
+  .actionbar .inner { display: flex; gap: 10px; align-items: center; }
+  .actionbar .sum { flex: 1; min-width: 0; }
+  .actionbar .sum small { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .actionbar .sum b { display: block; line-height: 1.1; font-family: var(--display); font-style: italic; font-weight: 900; font-size: 26px; color: var(--blue); white-space: nowrap; }
+
+  /* open transactions */
+  .search { margin-bottom: 12px; background: #fff; border-color: var(--line); }
+  .tx { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: var(--radius); padding: 14px; margin-bottom: 10px; cursor: pointer;
+        box-shadow: 0 1px 0 var(--line), 0 6px 18px rgba(21,55,184,.06); border-left: 6px solid var(--yellow); }
+  .tx:active { background: var(--blue-soft); }
+  .tx .id { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 22px; color: var(--blue); min-width: 44px; }
+  .tx .meta { flex: 1; min-width: 0; }
+  .tx .plate { font-weight: 700; }
+  .tx .who { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx .amt { text-align: right; font-weight: 700; white-space: nowrap; }
+  .tx .amt small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--yellow); color: var(--blue-dark); text-transform: uppercase; letter-spacing: .04em; }
+  .edit-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .edit-head .who { color: var(--muted); font-size: 14px; flex-basis: 100%; }
+
+  .status-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--bg); padding: 4px; border-radius: 12px; }
+  .status-seg button { min-height: 44px; border: 0; border-radius: 9px; background: transparent; font: 700 15px var(--body); color: var(--muted); cursor: pointer; }
+  .status-seg button.on { background: var(--blue); color: #fff; }
+  .status-seg button.on[data-v="Void"] { background: var(--red); }
+  .status-seg button.on[data-v="Completed"] { background: #138A4B; }
+  .status-seg.two { grid-template-columns: repeat(2, 1fr); }
+
+  .hide { display: none !important; }
+  #loading { text-align: center; padding: 60px 0; color: var(--muted); font-weight: 600; }
+  .spinner { width: 36px; height: 36px; border: 4px solid var(--blue-soft); border-top-color: var(--blue); border-radius: 50%; margin: 0 auto 12px; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #msg { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30; background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 600; max-width: calc(100% - 28px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+  #msg.err { background: var(--red); }
+
+  /* ---------- phone ---------- */
+  @media (max-width: 640px) {
+    header { padding-left: 14px; padding-right: 14px; }
+    .wordmark { font-size: 20px; }
+    /* tabs move to a bottom bar */
+    header { flex-wrap: wrap; row-gap: 10px; }
+    nav { flex-basis: 100%; gap: 6px; }
+    nav button { flex: 1; justify-content: center; height: 44px; font-size: 17px; padding: 0 8px; border-radius: 10px; background: rgba(255,255,255,.1); }
+    .actionbar .btn { padding: 0 16px; }
+    #btnBack { width: 50px; padding: 0; font-size: 26px; }
+    .grid { grid-template-columns: 1fr; }
+    .grid.keep { grid-template-columns: 1fr 1fr; }
+    .adder { grid-template-columns: 1fr 1fr; }
+    .adder .svc { grid-column: 1 / -1; }
+    .title { font-size: 24px; }
+  }
+  /* setup + session */
+  .setup { max-width: 460px; margin: 24px auto; }
+  .setup p { color: var(--muted); font-size: 15px; margin: 0 0 14px; }
+  .setup .btn { width: 100%; margin-top: 14px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+  .authbar { background: #FFF6CC; border: 2px solid var(--yellow); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; font-weight: 600; }
+  .authbar span { flex: 1; }
+  .acct { background: transparent; border: 0; color: #fff; opacity: .85; font: 600 13px var(--body); cursor: pointer; text-align: right; line-height: 1.3; }
+  .acct small { display: block; color: var(--yellow); font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 640px) { .acct { order: 2; } nav { order: 3; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="badge">S<span>J</span></div>
+    <div class="wordmark">Scooter Jam<small>Service Admin</small></div>
+  </div>
+  <button class="acct hide" id="acct" type="button" onclick="signOut()">Sign out<small id="sheetName"></small></button>
+  <nav id="nav" class="hide">
+    <button id="tabNew" class="on" onclick="show('new')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New
+    </button>
+    <button id="tabOpen" onclick="show('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Open
+      <span class="pill hide" id="openCount" style="padding:1px 7px;font-style:normal;font-family:var(--body)"></span>
+    </button>
+  </nav>
+</header>
+
+<main>
+  <div id="loading" class="hide"><div class="spinner"></div>Loading data from the sheet…</div>
+
+  <div class="authbar hide" id="authBar">
+    <span>Your Google sign-in expired.</span>
+    <button class="btn" type="button" onclick="signIn()">Sign in again</button>
+  </div>
+
+  <!-- SETUP -->
+  <section id="vSetup" class="hide">
+    <div class="setup">
+      <div class="title">Connect your sheet</div>
+      <div class="card">
+        <p>Paste the link of the Scooter Jam Google Sheet, then sign in with a Google account that can edit it.</p>
+        <label for="sheetUrl">Google Sheet link</label>
+        <input id="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off">
+        <button class="btn yellow" type="button" onclick="connect()">Sign in with Google</button>
+        <div class="note">Your data stays in your Google Sheet. This page has no server: your browser talks to Google directly, and only accounts the sheet is shared with can read or change it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEW -->
+  <section id="vNew" class="hide">
+    <div class="title">New transaction</div>
+
+    <div class="card">
+      <h2><span class="num">1</span>Customer</h2>
+      <div id="custPickBox" class="field">
+        <label for="custSearch">Search name or phone</label>
+        <input id="custSearch" list="custList" placeholder="e.g. Adji or 0813…" onchange="pickCustomer()" autocomplete="off">
+      </div>
+      <label class="toggle"><input type="checkbox" id="custNew" onchange="toggleNewCust()"> New customer</label>
+      <div id="custNewBox" class="grid hide" style="margin-top:12px">
+        <div class="field"><label for="cName">Name</label><input id="cName" autocomplete="off"></div>
+        <div class="field"><label for="cPhone">Phone</label><input id="cPhone" type="tel" inputmode="tel" placeholder="08…" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">2</span>Vehicle</h2>
+      <div id="vehPickBox" class="field">
+        <label for="vehSel">Vehicle</label>
+        <select id="vehSel" onchange="toggleNewVeh()"><option value="">Pick a customer first</option></select>
+      </div>
+      <div id="vehNewBox" class="hide">
+        <div class="field"><label for="vPlate">License plate</label><input id="vPlate" placeholder="B 1234 ABC" autocapitalize="characters" autocomplete="off"></div>
+        <div class="grid keep">
+          <div class="field"><label for="vType">Vehicle type</label><select id="vType"></select></div>
+          <div class="field"><label for="mType">Machine</label><select id="mType"></select></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label for="vColor">Color</label><input id="vColor" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="num">3</span>Details</h2>
+      <div class="field"><label for="txDate">Date</label><input type="date" id="txDate"></div>
+      <label>Status</label>
+      <div class="status-seg two" id="newStatus">
+        <button type="button" data-v="Open" class="on">Open</button>
+        <button type="button" data-v="Completed">Completed</button>
+      </div>
+    </div>
+
+    <div id="slotNew"></div>
+  </section>
+
+  <!-- OPEN LIST -->
+  <section id="vOpen" class="hide">
+    <div class="title">Open transactions</div>
+    <input class="search" id="openSearch" type="search" placeholder="Search plate, customer or #ID" oninput="renderOpen()">
+    <div id="openList"></div>
+  </section>
+
+  <!-- EDIT -->
+  <section id="vEdit" class="hide">
+    <div class="title" id="editTitle"></div>
+    <div class="card">
+      <div class="edit-head" id="editHead"></div>
+      <div style="margin-top:14px">
+        <label>Status</label>
+        <div class="status-seg" id="edStatus">
+          <button type="button" data-v="Open">Open</button>
+          <button type="button" data-v="Completed">Completed</button>
+          <button type="button" data-v="Void">Void</button>
+        </div>
+      </div>
+    </div>
+    <div id="slotEdit"></div>
+  </section>
+
+  <!-- SERVICES (shared by New and Edit) -->
+  <div id="svcCard" class="card hide">
+    <h2><span class="num" id="svcNum">4</span>Services</h2>
+    <div class="adder">
+      <div class="field svc"><label for="svcInput">Service / part</label>
+        <input id="svcInput" list="svcList" placeholder="Type to search…" onchange="pickSvc()" autocomplete="off"></div>
+      <div class="field"><label for="svcPrice">Price (Rp)</label><input id="svcPrice" type="number" inputmode="numeric" min="0" step="1000"></div>
+      <div class="field"><label for="mechSel">Mechanic</label><select id="mechSel"></select></div>
+      <button class="btn yellow full add" type="button" onclick="addLine()">+ Add service</button>
+    </div>
+    <div class="lines" id="lines"></div>
+    <div class="summary">
+      <div class="field"><label for="disc">Discount %</label><input id="disc" type="number" inputmode="decimal" min="0" max="100" value="0" oninput="renderLines()"></div>
+      <div class="total-box"><span class="sub" id="subLine"></span><span class="big" id="bigTotal">Rp0</span></div>
+    </div>
+  </div>
+
+  <!-- save bar (sits at the end of the form) -->
+  <div class="actionbar hide" id="actionbar">
+    <div class="inner">
+      <button class="btn ghost hide" id="btnBack" type="button" aria-label="Back" onclick="show('open')">‹</button>
+      <div class="sum"><small id="barLabel">Total</small><b id="barTotal">Rp0</b></div>
+      <button class="btn" id="btnSave" type="button" onclick="mode === 'edit' ? saveEdit() : saveNew()">Save</button>
+    </div>
+  </div>
+</main>
+
+<datalist id="custList"></datalist>
+<datalist id="svcList"></datalist>
+<div id="msg" class="hide"></div>
+
+<script>
+  /* ================= CONFIG =================
+   * Paste your OAuth Client ID here (Google Cloud → APIs & Services → Credentials).
+   * It is public by design; it only works on the website addresses you allow there. */
+  const CLIENT_ID = '72170103490-9u4j58d7er0rluoaimmank28706uera0.apps.googleusercontent.com';
+  const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+  const T = { tx: 'Transaction', svc: 'Service', cust: 'Customer', veh: 'Customer Vehicle',
+              vtype: 'Vehicle Type', mtype: 'Machine Type', mech: 'Mechanic', stype: 'Service Type' };
+  const FMT = {
+    date: { type: 'DATE', pattern: 'dd/mm/yyyy' },
+    rp: { type: 'CURRENCY', pattern: '"Rp"#,##0' },
+    pct: { type: 'PERCENT', pattern: '0%' },
+  };
+
+  /* ================= state ================= */
+  let D = null, DB = null, SHEET_IDS = {}, lines = [], mode = 'new', editing = null, stash = { lines: [], disc: 0 };
+  let token = null, tokenExp = 0, tokenClient = null, afterAuth = null;
+  let SID = localStorage.getItem('sj_sheet_id') || '';
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  const rp = n => 'Rp' + Math.round(Number(n) || 0).toLocaleString('id-ID');
+  const idFrom = (s, re) => { const m = String(s || '').match(re); return m ? Number(m[1]) : null; };
+  const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const fmtDate = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : esc(s); };
+  const num = x => typeof x === 'number' ? x : (Number(String(x || '').replace(/[^\d.-]/g, '')) || 0);
+  const same = (a, b) => String(a) === String(b);
+  /* text typed by the admin is stored as plain text (leading ' stops it being read as a formula or number) */
+  const txt = v => "'" + String(v == null ? '' : v);
+  const serialToISO = n => typeof n === 'number' ? new Date(Math.round((n - 25569) * 86400000)).toISOString().slice(0, 10) : String(n || '');
+  const isoToSerial = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 86400000 + 25569; };
+  const letter = n => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const q = name => `'${name.replace(/'/g, "''")}'`;
+
+  /* ================= auth ================= */
+  function initAuth() {
+    if (!window.google || !google.accounts) return setTimeout(initAuth, 200);
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID, scope: SCOPE,
+      callback: r => {
+        if (r.error) return toast('Sign-in failed: ' + r.error, true);
+        token = r.access_token; tokenExp = Date.now() + (Number(r.expires_in) - 60) * 1000;
+        $('authBar').classList.add('hide');
+        const f = afterAuth; afterAuth = null; if (f) f();
+      },
+    });
+  }
+  function signIn(then) {
+    if (CLIENT_ID.startsWith('PASTE_')) return toast('Set CLIENT_ID in index.html first (see setup guide).', true);
+    if (!tokenClient) return toast('Google sign-in is still loading, try again in a second.', true);
+    afterAuth = then || null;
+    tokenClient.requestAccessToken({ prompt: token ? '' : 'select_account' });
+  }
+  function signOut() {
+    if (token) google.accounts.oauth2.revoke(token, () => {});
+    token = null; tokenExp = 0; D = null;
+    showSetup();
+  }
+  function needAuth() {
+    $('authBar').classList.remove('hide');
+    const e = new Error('Your sign-in expired. Tap "Sign in again", then repeat the action.'); e.auth = true; throw e;
+  }
+
+  /* ================= Sheets API ================= */
+  async function api(path, body, method) {
+    if (!token || Date.now() > tokenExp) needAuth();
+    const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SID) + path, {
+      method: method || (body ? 'POST' : 'GET'),
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (r.status === 401) { token = null; needAuth(); }
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      const m = (e.error && e.error.message) || r.statusText;
+      if (r.status === 403) throw new Error('This Google account has no edit access to the sheet. Ask the owner to share it with you.');
+      if (r.status === 404) throw new Error('Sheet not found. Check the link.');
+      throw new Error(m);
+    }
+    return r.json();
+  }
+  /* read whole tabs into {headers, rows, raw, free(n)} */
+  async function readTabs(names) {
+    const qs = names.map(n => 'ranges=' + encodeURIComponent(q(n))).join('&');
+    const r = await api(`/values:batchGet?${qs}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`);
+    const out = {};
+    names.forEach((n, i) => {
+      const raw = r.valueRanges[i].values || [[]];
+      const headers = (raw[0] || []).map(h => String(h).trim());
+      const rows = raw.slice(1).map((row, k) => {
+        const o = { _row: k + 2 };
+        headers.forEach((h, j) => { o[h] = row[j] === undefined ? '' : row[j]; });
+        return o;
+      }).filter(o => o.ID !== '' && o.ID !== null);
+      const isEmpty = k => !raw[k] || raw[k][0] === '' || raw[k][0] === undefined || raw[k][0] === null;
+      out[n] = {
+        name: n, headers, rows,
+        /* next n empty rows (by column A), below the header */
+        free(count) {
+          const res = []; let k = 1;
+          while (res.length < count) { if (isEmpty(k)) res.push(k + 1); k++; }
+          return res;
+        },
+        col(h) { const i = headers.indexOf(h); if (i < 0) throw new Error(`Column "${h}" not found in tab ${n}`); return i; },
+        L(h) { return letter(this.col(h) + 1); },
+        nextId() { return rows.reduce((m, x) => Math.max(m, Number(x.ID) || 0), 0) + 1; },
+      };
+    });
+    return out;
+  }
+  async function loadSheetIds() {
+    const r = await api('?fields=properties.title,sheets.properties(sheetId,title)');
+    SHEET_IDS = {}; r.sheets.forEach(s => SHEET_IDS[s.properties.title] = s.properties.sheetId);
+    const missing = Object.values(T).filter(n => !(n in SHEET_IDS));
+    if (missing.length) throw new Error('This sheet is missing tabs: ' + missing.join(', '));
+    return r.properties.title;
+  }
+  /* one row write; keys not in obj are left untouched (null = skip) */
+  function rowWrite(tab, row, obj) {
+    const vals = tab.headers.map(h => (h in obj ? obj[h] : null));
+    return { range: `${q(tab.name)}!A${row}:${letter(tab.headers.length)}${row}`, values: [vals] };
+  }
+  function fmtReq(tab, row, header, numberFormat) {
+    const c = tab.col(header);
+    return { repeatCell: {
+      range: { sheetId: SHEET_IDS[tab.name], startRowIndex: row - 1, endRowIndex: row, startColumnIndex: c, endColumnIndex: c + 1 },
+      cell: { userEnteredFormat: { numberFormat } }, fields: 'userEnteredFormat.numberFormat' } };
+  }
+  function lookupF(keyCell, tab, retHeader) {
+    const id = tab.L('ID'), ret = tab.L(retHeader);
+    return `=IFERROR(INDEX(${q(tab.name)}!${ret}:${ret}, MATCH(${keyCell}, ${q(tab.name)}!${id}:${id}, 0)), "")`;
+  }
+
+  /* ================= data (port of Code.gs) ================= */
+  async function getInitData() {
+    DB = await readTabs(Object.values(T));
+    const customers = DB[T.cust].rows.map(c => ({ id: c.ID, name: String(c.Name), phone: String(c.Phone) }));
+    const vehicles = DB[T.veh].rows.map(v => ({ id: v.ID, customerId: v['Customer ID'], plate: String(v['License Plate']),
+      type: String(v['Vehicle Name']), machine: String(v['Machine Name']), color: String(v['Vehicle Color']) }));
+    const services = DB[T.svc].rows;
+    const open = DB[T.tx].rows.filter(t => !['Completed', 'Void'].includes(String(t.Status))).map(t => {
+      const v = vehicles.find(x => same(x.id, t['Customer Vehicle ID'])) || {};
+      const c = customers.find(x => same(x.id, v.customerId)) || {};
+      const svc = services.filter(s => same(s['Transaction ID'], t.ID));
+      return { id: t.ID, date: serialToISO(t['Transaction Date']), status: String(t.Status || 'Open'), plate: v.plate || '',
+        vehicle: v.type || '', customer: c.name || '', count: svc.length, total: svc.reduce((a, s) => a + num(s.Price), 0) };
+    }).sort((a, b) => Number(b.id) - Number(a.id));
+    return {
+      customers, vehicles, open,
+      vehicleTypes: DB[T.vtype].rows.map(r => ({ id: r.ID, name: String(r.Name) })),
+      machineTypes: DB[T.mtype].rows.map(r => ({ id: r.ID, name: String(r.Name) })),
+      mechanics: DB[T.mech].rows.filter(m => String(m.Status) === 'Active').map(m => ({ id: m.ID, name: String(m.Name) })),
+      serviceTypes: DB[T.stype].rows.filter(s => String(s.Status) === 'Active').map(s => ({ id: s.ID, item: String(s.Item), price: num(s['Selling Price']) })),
+    };
+  }
+
+  async function getTransaction(id) {
+    const d = await readTabs([T.tx, T.svc, T.veh]);
+    const t = d[T.tx].rows.find(x => same(x.ID, id));
+    if (!t) throw new Error('Transaction #' + id + ' not found');
+    const v = d[T.veh].rows.find(x => same(x.ID, t['Customer Vehicle ID'])) || {};
+    const services = d[T.svc].rows.filter(s => same(s['Transaction ID'], id)).map(s => {
+      const st = DB[T.stype].rows.find(x => same(x.ID, s['Service Type ID'])) || {};
+      const m = DB[T.mech].rows.find(x => same(x.ID, s['Mechanic ID'])) || {};
+      return { serviceId: s.ID, typeId: s['Service Type ID'], item: String(st.Item || '(unknown item)'),
+        mechanicId: s['Mechanic ID'], mechanic: String(m.Name || ''), price: num(s.Price) };
+    });
+    return { id: t.ID, date: serialToISO(t['Transaction Date']), status: String(t.Status || 'Open'), discount: num(t.Discount),
+      plate: String(v['License Plate'] || ''), customer: String(v['Customer Name'] || ''), vehicle: String(v['Vehicle Name'] || ''), services };
+  }
+
+  function serviceWrites(svcTab, txId, list, writes, fmts) {
+    if (!list.length) return;
+    const rows = svcTab.free(list.length);
+    let id = svcTab.nextId();
+    list.forEach((s, i) => {
+      writes.push(rowWrite(svcTab, rows[i], { 'ID': id++, 'Transaction ID': Number(txId), 'Service Type ID': Number(s.serviceTypeId),
+        'Mechanic ID': Number(s.mechanicId), 'Price': Number(s.price) || 0 }));
+      fmts.push(fmtReq(svcTab, rows[i], 'Price', FMT.rp));
+    });
+  }
+
+  async function saveTransaction(p) {
+    const d = await readTabs([T.cust, T.veh, T.tx, T.svc]);   // fresh read right before writing
+    const cust = d[T.cust], veh = d[T.veh], tx = d[T.tx], svc = d[T.svc];
+    const writes = [], fmts = [];
+
+    let custId = p.customerId;
+    if (!custId) {
+      custId = cust.nextId(); const r = cust.free(1)[0];
+      writes.push(rowWrite(cust, r, { 'ID': custId, 'Name': txt(p.newCustomer.name), 'Phone': txt(p.newCustomer.phone), 'Created Date': isoToSerial(today()) }));
+      fmts.push(fmtReq(cust, r, 'Created Date', FMT.date));
+    }
+    let vehId = p.vehicleId;
+    if (!vehId) {
+      const nv = p.newVehicle; vehId = veh.nextId(); const r = veh.free(1)[0];
+      const vC = veh.L('Customer ID'), vT = veh.L('Vehicle Type ID'), vM = veh.L('Machine Type ID'), vId = veh.L('ID');
+      const tD = tx.L('Transaction Date'), tV = tx.L('Customer Vehicle ID'), tS = tx.L('Status');
+      writes.push(rowWrite(veh, r, {
+        'ID': vehId, 'Customer ID': Number(custId),
+        'Customer Name': lookupF(vC + r, cust, 'Name'), 'Customer Phone': lookupF(vC + r, cust, 'Phone'),
+        'License Plate': txt(nv.plate.toUpperCase()),
+        'Vehicle Type ID': Number(nv.vehicleTypeId), 'Vehicle Name': lookupF(vT + r, DB[T.vtype], 'Name'),
+        'Machine Type ID': Number(nv.machineTypeId), 'Machine Name': lookupF(vM + r, DB[T.mtype], 'Name'),
+        'Vehicle Color': txt(nv.color),
+        'Last Service Date': `=LET(d, MAXIFS(${q(T.tx)}!${tD}:${tD}, ${q(T.tx)}!${tV}:${tV}, ${vId}${r}, ${q(T.tx)}!${tS}:${tS}, "Completed"), IF(d=0, "", d))`,
+      }));
+      fmts.push(fmtReq(veh, r, 'Last Service Date', FMT.date));
+    }
+    const txId = tx.nextId(), r = tx.free(1)[0];
+    const sTx = svc.L('Transaction ID'), sP = svc.L('Price');
+    writes.push(rowWrite(tx, r, {
+      'ID': txId, 'Transaction Date': isoToSerial(p.date),
+      'Original Price': `=SUMIF(${q(T.svc)}!${sTx}:${sTx}, ${tx.L('ID')}${r}, ${q(T.svc)}!${sP}:${sP})`,
+      'Discount': p.discount, 'Price After Discount': `=${tx.L('Original Price')}${r}*(1-${tx.L('Discount')}${r})`,
+      'Status': p.status, 'Customer Vehicle ID': Number(vehId),
+    }));
+    ['Transaction Date', 'Original Price', 'Discount', 'Price After Discount'].forEach((h, i) =>
+      fmts.push(fmtReq(tx, r, h, [FMT.date, FMT.rp, FMT.pct, FMT.rp][i])));
+    serviceWrites(svc, txId, p.services, writes, fmts);
+
+    await api('/values:batchUpdate', { valueInputOption: 'USER_ENTERED', data: writes });
+    await api(':batchUpdate', { requests: fmts });
+    await checkDuplicates(txId);
+    return txId;
+  }
+
+  async function updateTransaction(id, u) {
+    const d = await readTabs([T.tx, T.svc]);
+    const tx = d[T.tx], svc = d[T.svc];
+    const t = tx.rows.find(x => same(x.ID, id));
+    if (!t) throw new Error('Transaction #' + id + ' not found');
+    const current = svc.rows.filter(s => same(s['Transaction ID'], id));
+    const toDelete = current.filter(s => u.remove.some(x => same(x, s.ID)));
+    if (u.status === 'Completed' && current.length - toDelete.length + u.add.length === 0)
+      throw new Error('A completed transaction needs at least one service.');
+
+    const writes = [], reqs = [];
+    serviceWrites(svc, id, u.add, writes, reqs);
+    writes.push({ range: `${q(T.tx)}!${tx.L('Discount')}${t._row}`, values: [[u.discount]] });
+    writes.push({ range: `${q(T.tx)}!${tx.L('Status')}${t._row}`, values: [[u.status]] });
+    await api('/values:batchUpdate', { valueInputOption: 'USER_ENTERED', data: writes });
+
+    // delete removed service rows bottom-up so row numbers stay valid
+    toDelete.sort((a, b) => b._row - a._row).forEach(s => reqs.push({ deleteDimension: {
+      range: { sheetId: SHEET_IDS[T.svc], dimension: 'ROWS', startIndex: s._row - 1, endIndex: s._row } } }));
+    if (reqs.length) await api(':batchUpdate', { requests: reqs });
+    return true;
+  }
+
+  /* no server lock: if two admins saved in the same second, warn instead of silently mixing data */
+  async function checkDuplicates(txId) {
+    const d = await readTabs([T.tx]);
+    if (d[T.tx].rows.filter(x => same(x.ID, txId)).length > 1)
+      toast('Warning: another admin saved at the same moment and transaction #' + txId + ' now appears twice. Please fix the ID in the sheet.', true);
+  }
+
+  /* ================= setup screen ================= */
+  function parseSheetId(s) {
+    const m = String(s || '').match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+    return m ? m[1] : (/^[a-zA-Z0-9_-]{25,}$/.test(String(s).trim()) ? String(s).trim() : '');
+  }
+  function showSetup() {
+    ['vNew', 'vOpen', 'vEdit'].forEach(v => $(v).classList.add('hide'));
+    $('svcCard').classList.add('hide'); $('actionbar').classList.add('hide');
+    $('loading').classList.add('hide'); $('nav').classList.add('hide'); $('acct').classList.add('hide');
+    $('vSetup').classList.remove('hide');
+    $('sheetUrl').value = SID ? `https://docs.google.com/spreadsheets/d/${SID}/edit` : '';
+  }
+  function connect() {
+    const id = parseSheetId($('sheetUrl').value);
+    if (!id) return toast('Paste the full Google Sheet link.', true);
+    SID = id; localStorage.setItem('sj_sheet_id', SID);
+    signIn(start);
+  }
+  async function start() {
+    $('vSetup').classList.add('hide'); $('loading').classList.remove('hide');
+    try {
+      const title = await loadSheetIds();
+      $('sheetName').textContent = title;
+      $('nav').classList.remove('hide'); $('acct').classList.remove('hide');
+      await load();
+      show('new');
+    } catch (e) {
+      if (!e.auth) { toast(e.message, true); showSetup(); }
+    }
+  }
+
+  /* ================= UI ================= */
+  function segValue(id) { const b = $(id).querySelector('button.on'); return b ? b.dataset.v : 'Open'; }
+  function segSet(id, v) { $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+  ['newStatus', 'edStatus'].forEach(id => $(id).addEventListener('click', e => { if (e.target.dataset.v) segSet(id, e.target.dataset.v); }));
+
+  function toast(t, err) {
+    const m = $('msg'); m.textContent = t; m.classList.toggle('err', !!err); m.classList.remove('hide');
+    clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.add('hide'), err ? 6000 : 3500);
+  }
+  async function call(fn, ...args) {
+    try { return await fn(...args); }
+    catch (e) { toast(e.message || String(e), true); throw e; }
+  }
+
+  async function load() {
+    D = await call(getInitData);
+    $('custList').innerHTML = D.customers.map(c => `<option value="${esc(c.name)} · ${esc(c.phone)} #${c.id}">`).join('');
+    $('svcList').innerHTML = D.serviceTypes.map(s => `<option value="#${s.id} ${esc(s.item)} · ${rp(s.price)}">`).join('');
+    $('vType').innerHTML = '<option value="">Choose…</option>' + D.vehicleTypes.map(v => `<option value="${v.id}">${esc(v.name)}</option>`).join('');
+    $('mType').innerHTML = '<option value="">Choose…</option>' + D.machineTypes.map(v => `<option value="${v.id}">${esc(v.name)}</option>`).join('');
+    $('mechSel').innerHTML = D.mechanics.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    $('openCount').textContent = D.open.length;
+    $('openCount').classList.toggle('hide', !D.open.length);
+    $('loading').classList.add('hide');
+    renderOpen();
+  }
+
+  function show(v) {
+    if (mode === 'new' && v !== 'new') stash = { lines, disc: $('disc').value };
+    if (v === 'new' && mode !== 'new') { lines = stash.lines; $('disc').value = stash.disc; }
+    mode = v;
+    $('vNew').classList.toggle('hide', v !== 'new');
+    $('vOpen').classList.toggle('hide', v !== 'open');
+    $('vEdit').classList.toggle('hide', v !== 'edit');
+    $('tabNew').classList.toggle('on', v === 'new');
+    $('tabOpen').classList.toggle('on', v !== 'new');
+    $('svcCard').classList.toggle('hide', v === 'open');
+    $('actionbar').classList.toggle('hide', v === 'open');
+    $('btnBack').classList.toggle('hide', v !== 'edit');
+    $('svcNum').textContent = v === 'edit' ? '1' : '4';
+    if (v === 'new') { $('slotNew').appendChild($('svcCard')); $('slotNew').appendChild($('actionbar')); }
+    if (v === 'edit') { $('slotEdit').appendChild($('svcCard')); $('slotEdit').appendChild($('actionbar')); }
+    if (v === 'open') renderOpen();
+    renderLines();
+    window.scrollTo(0, 0);
+  }
+
+  function pickCustomer() {
+    const id = idFrom($('custSearch').value, /#(\d+)\s*$/);
+    const vs = id ? D.vehicles.filter(v => same(v.customerId, id)) : [];
+    $('vehSel').innerHTML = (id ? '' : '<option value="">Pick a customer first</option>') +
+      vs.map(v => `<option value="${v.id}">${esc(v.plate)} · ${esc(v.type)} ${esc(v.machine)}${v.color ? ' · ' + esc(v.color) : ''}</option>`).join('') +
+      (id ? '<option value="new">+ New vehicle</option>' : '');
+    if (id && !vs.length) $('vehSel').value = 'new';
+    toggleNewVeh();
+  }
+  function toggleNewCust() {
+    const isNew = $('custNew').checked;
+    $('custNewBox').classList.toggle('hide', !isNew);
+    $('custPickBox').classList.toggle('hide', isNew);
+    $('vehPickBox').classList.toggle('hide', isNew);
+    if (isNew) { $('vehSel').innerHTML = '<option value="new">+ New vehicle</option>'; $('vehSel').value = 'new'; }
+    else pickCustomer();
+    toggleNewVeh();
+  }
+  function toggleNewVeh() { $('vehNewBox').classList.toggle('hide', $('vehSel').value !== 'new'); }
+
+  function pickSvc() {
+    const st = D.serviceTypes.find(s => s.id === idFrom($('svcInput').value, /^#(\d+)/));
+    if (st) $('svcPrice').value = st.price;
+  }
+  function addLine() {
+    const st = D.serviceTypes.find(s => s.id === idFrom($('svcInput').value, /^#(\d+)/));
+    if (!st) return toast('Pick a service from the list.', true);
+    const mid = Number($('mechSel').value);
+    const mech = D.mechanics.find(m => m.id === mid);
+    if (!mech) return toast('Pick a mechanic.', true);
+    lines.push({ typeId: st.id, item: st.item, mechanicId: mid, mechanic: mech.name, price: Number($('svcPrice').value) || 0 });
+    $('svcInput').value = ''; $('svcPrice').value = '';
+    renderLines();
+    toast('Added: ' + st.item);
+  }
+  function removeLine(i) {
+    const l = lines[i];
+    if (l.serviceId && editing) editing.removed.push(l.serviceId);
+    lines.splice(i, 1);
+    renderLines();
+  }
+  function renderLines() {
+    $('lines').innerHTML = lines.length
+      ? lines.map((l, i) => `<div class="line"><div class="info"><div class="item">${esc(l.item)}</div><div class="mech">${esc(l.mechanic)}</div></div>
+          <div class="price">${rp(l.price)}</div><button class="x" type="button" aria-label="Remove" onclick="removeLine(${i})">×</button></div>`).join('')
+      : '<div class="empty">No services added yet.</div>';
+    const sub = lines.reduce((a, l) => a + l.price, 0);
+    const pct = Math.min(100, Math.max(0, Number($('disc').value) || 0));
+    const total = sub * (1 - pct / 100);
+    $('subLine').textContent = pct ? `${rp(sub)} − ${pct}%` : `${lines.length} item${lines.length === 1 ? '' : 's'}`;
+    $('bigTotal').textContent = rp(total);
+    $('barTotal').textContent = rp(total);
+    $('barLabel').textContent = `Total · ${lines.length} service${lines.length === 1 ? '' : 's'}`;
+  }
+
+  async function saveNew() {
+    const isNewCust = $('custNew').checked;
+    const customerId = isNewCust ? null : idFrom($('custSearch').value, /#(\d+)\s*$/);
+    if (!isNewCust && !customerId) return toast('Pick a customer from the list, or tick "New customer".', true);
+    if (isNewCust && !$('cName').value.trim()) return toast('Enter the customer name.', true);
+    const vehVal = $('vehSel').value;
+    if (!vehVal) return toast('Pick a vehicle.', true);
+    const isNewVeh = vehVal === 'new';
+    if (isNewVeh && (!$('vPlate').value.trim() || !$('vType').value || !$('mType').value))
+      return toast('Fill in plate, vehicle type and machine.', true);
+    if (!$('txDate').value) return toast('Pick a date.', true);
+    const status = segValue('newStatus');
+    if (status === 'Completed' && !lines.length) return toast('Add at least one service before completing.', true);
+
+    const payload = {
+      customerId,
+      newCustomer: isNewCust ? { name: $('cName').value.trim(), phone: $('cPhone').value.trim() } : null,
+      vehicleId: isNewVeh ? null : Number(vehVal),
+      newVehicle: isNewVeh ? { plate: $('vPlate').value.trim(), vehicleTypeId: $('vType').value, machineTypeId: $('mType').value, color: $('vColor').value.trim() } : null,
+      date: $('txDate').value, status,
+      discount: (Number($('disc').value) || 0) / 100,
+      services: lines.map(l => ({ serviceTypeId: l.typeId, mechanicId: l.mechanicId, price: l.price })),
+    };
+    $('btnSave').disabled = true;
+    try {
+      const id = await call(saveTransaction, payload);
+      toast('Transaction #' + id + ' saved ✓');
+      resetNew();
+      await load();
+      window.scrollTo(0, 0);
+    } catch (e) {} finally { $('btnSave').disabled = false; }
+  }
+  function resetNew() {
+    ['custSearch', 'cName', 'cPhone', 'vPlate', 'vColor'].forEach(id => $(id).value = '');
+    $('vType').value = ''; $('mType').value = '';
+    $('custNew').checked = false; toggleNewCust();
+    $('txDate').value = today(); segSet('newStatus', 'Open');
+    $('disc').value = 0; lines = []; renderLines();
+  }
+
+  function renderOpen() {
+    if (!D) return;
+    const qy = $('openSearch').value.trim().toLowerCase().replace(/^#/, '');
+    const list = D.open.filter(t => !qy || String(t.id) === qy || (t.plate + ' ' + t.customer).toLowerCase().includes(qy));
+    $('openList').innerHTML = list.length
+      ? list.map(t => `<div class="tx" onclick="openTx(${t.id})">
+          <div class="id">#${t.id}</div>
+          <div class="meta"><div class="plate">${esc(t.plate) || '—'} <span style="color:var(--muted);font-weight:500">${esc(t.vehicle)}</span></div>
+            <div class="who">${esc(t.customer)} · ${fmtDate(t.date)}</div></div>
+          <div class="amt">${rp(t.total)}<small>${t.count} service${t.count === 1 ? '' : 's'}</small></div></div>`).join('')
+      : `<div class="card empty">${D.open.length ? 'No match.' : 'No open transactions 🎉'}</div>`;
+  }
+  async function openTx(id) {
+    let t; try { t = await call(getTransaction, id); } catch (e) { return; }
+    if (mode === 'new') stash = { lines, disc: $('disc').value };
+    editing = { id: t.id, removed: [] };
+    lines = t.services.map(s => ({ ...s }));
+    $('editTitle').textContent = 'Transaction #' + t.id;
+    $('editHead').innerHTML = `<b style="font-size:18px">${esc(t.plate)}</b> <span class="pill">${esc(t.status)}</span>
+      <div class="who">${esc(t.customer)} · ${esc(t.vehicle)} · ${fmtDate(t.date)}</div>`;
+    segSet('edStatus', t.status === 'Completed' || t.status === 'Void' ? t.status : 'Open');
+    $('disc').value = Math.round(t.discount * 100);
+    mode = 'edit';
+    show('edit');
+  }
+  async function saveEdit() {
+    const status = segValue('edStatus');
+    if (status === 'Completed' && !lines.length) return toast('Add at least one service before completing.', true);
+    if (status === 'Void' && !confirm('Mark transaction #' + editing.id + ' as Void?')) return;
+    $('btnSave').disabled = true;
+    try {
+      await call(updateTransaction, editing.id, {
+        status, discount: (Number($('disc').value) || 0) / 100,
+        add: lines.filter(l => !l.serviceId).map(l => ({ serviceTypeId: l.typeId, mechanicId: l.mechanicId, price: l.price })),
+        remove: editing.removed,
+      });
+      toast('Transaction #' + editing.id + ' updated ✓');
+      editing = null;
+      await load();
+      show('open');
+    } catch (e) {} finally { $('btnSave').disabled = false; }
+  }
+
+  /* ================= boot ================= */
+  $('txDate').value = today();
+  renderLines();
+  initAuth();
+  showSetup();
+</script>
+
+</body>
+</html>
